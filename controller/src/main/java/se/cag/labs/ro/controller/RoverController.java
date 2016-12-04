@@ -15,7 +15,7 @@ import se.cag.labs.ro.bean.Movement;
 import java.io.IOException;
 
 @Api(basePath = "*", value = "Rover controller", description = "For controlling the rover", produces = "application/json")
-@RestController
+@RestController()
 @CrossOrigin(origins = "*", methods = {RequestMethod.GET, RequestMethod.POST})
 @Log4j
 public class RoverController {
@@ -23,7 +23,7 @@ public class RoverController {
     @Autowired
     private MotorService motorService;
 
-    @RequestMapping(value = "/status", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/status", method = RequestMethod.GET)
     @ApiOperation(value = "Fetches the rover status",
             notes = "Fetches the rover status")
     @ApiResponses(value = {
@@ -35,7 +35,7 @@ public class RoverController {
     }
 
 
-    @RequestMapping(value = "/move", method = RequestMethod.POST)
+    @RequestMapping(value = "/api/move", method = RequestMethod.POST)
     @ApiOperation(value = "Moves the rover",
             notes = "Fetches the rover status")
     @ApiResponses(value = {
@@ -51,7 +51,24 @@ public class RoverController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return ResponseEntity.status(HttpStatus.OK).body("Argh, rov rov rov!" + movement.toString());
+        return ResponseEntity.ok("Argh, rov rov rov!" + movement.toString());
+    }
+
+
+    @RequestMapping(value = "/api/fire", method = RequestMethod.POST)
+    @ApiOperation(value = "Fires the laser",
+            notes = "Fires the laser")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "The status was retreived successfully"),
+            @ApiResponse(code = 500, message = "Something went wrong when processing the request")
+    })
+    public ResponseEntity<String> fire() {
+        try {
+            motorService.setLaser(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return ResponseEntity.ok("Argh");
     }
 
 }

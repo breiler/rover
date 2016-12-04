@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <link rel="stylesheet" href="node_modules/font-awesome/css/font-awesome.css"/>
+
+    <script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="js/camera.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+        .outsideWrapper{
+            border-radius: 10px;
+            width:1024px;
+            height:768px;
+            margin:20px 20px;
+            background-color: white;
+            overflow: hidden;
+            border:1px solid gray;
+        }
+
+        .insideWrapper {
+            width:100%; height:100%;
+            position:relative;
+        }
+
+        .insideWrapper img {
+            width:100%;
+            height:100%;
+            position:absolute;
+            top:0px;
+            left:0px;
+        }
+
+        .insideWrapper canvas {
+            width:1025px;
+            height:768px;
+            position:absolute;
+            top:0px;
+            left:0px;
+        }
+
+        .insideWrapper .infobox {
+            position:absolute;
+            top:30px;
+            right:30px;
+            color: white;
+        }
+
+        .insideWrapper .infobox span{
+            margin-left: 1em;
+        }
+
+        .infobox i {
+            font-size: 2em;
+        }
+
+    </style>
+</head>
+<body>
+
+<section>
+
+    <div class="outsideWrapper">
+        <div class="insideWrapper">
+            <img id="mjpeg_dest" src="img/cam_pic.jpeg">
+            <canvas id="canvas" width="1024" height="768">This text is displayed if your browser does not support HTML5 Canvas.</canvas>
+            <div class="infobox">
+                <span id="connection-icon"><i class="fa fa-wifi" aria-hidden="true"></i></span>
+                <span id="gamepad-icon"><i class="fa fa-gamepad" aria-hidden="true"></i></span>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+
+
+    var hasGP = false;
+    var repGP;
+
+    var speedLeft = 0.0;
+    var speedRight = 0.0;
+    var fire = false;
+
+    var ws;
+    var ctx;
+
+    var oldSpeedLeft = 0.01;
+    var oldSpeedRight = 0.01;
+    var connected = false;
+    var oldFire = false;
+
+    function canGame() {
+        return "getGamepads" in navigator;
+    }
+
+    function reportOnGamepad() {
+        var gp = navigator.getGamepads()[0];
+        if( gp && gp.buttons ) {
+            if( gp.buttons[5].pressed ||gp.buttons[4].pressed  ) {
+                fire = true;
+            } else {
+                fire = false;
+            }
+
+            if( gp.axes.length >= 0) {
+                speedLeft = Math.round(-gp.axes[1] / 2.5 * 1000) / 1000;
+                speedRight = Math.round(-gp.axes[3] / 2.5 * 1000 ) / 1000;
+            }
+        }
+    }
+
+    $(document).ready(function() {
+
+        setTimeout('init(0, 25, 1);', 100);
+        $('#gamepad-icon').hide();
+        $('#connection-icon').hide();
+
+        var host = window.location.hostname;
+
+        if(canGame()) {
+            $(window).on("gamepadconnected", function() {
+                hasGP = true;
+                $('#gamepad-icon').show();
+                console.log("connection event");
+                repGP = window.setInterval(reportOnGamepad,100);
+            });
+
+            $(window).on("gamepaddisconnected", function() {
+                console.log("disconnection event");
+                $('#gamepad-icon').hide();
+                window.clearInterval(repGP);
+            });
+
+            //setup an interval for Chrome
+            var checkGP = window.setInterval(function() {
+                console.log('checkGP');
+                if(navigator.getGamepads()[0]) {
+                    if(!hasGP) $(window).trigger("gamepadconnected");
+                    window.clearInterval(checkGP);
+                }
+            }, 1000);
+        }
+
+        connect();
+        initOverlay();
+    });
+
+    function circle(x,y,r) {
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI*2, true);
+        ctx.fill();
+    }
+
+    function rect(x,y,w,h) {
+        ctx.beginPath();
+        ctx.rect(x,y,w,h);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    function connect() {
+
+        // Let us open a web socket
+        ws = new WebSocket('ws://'+location.hostname+(location.port ? ':'+location.port: '') + '/rover/api/eventbus');
+
+        ws.onopen = function() {
+            console.log("Connected");
+            connected = true;
+            $('#connection-icon').show();
+        };
+
+        ws.onmessage = function (evt) {
+            console.log(evt.data);
+        };
+
+        ws.onclose = function() {
+            console.log("Disconnected");
+            connected = false;
+            $('#connection-icon').hide();
+        };
+    }
+
+    function initOverlay() {
+        var canvas = document.getElementById("canvas");
+        ctx = canvas.getContext("2d");
+        return setInterval(draw, 10);
+    }
+
+    function draw() {
+
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        if( fire ) {
+            ctx.fillStyle = "rgba(255, 0, 0, 0.1)";
+            rect(0,0, ctx.canvas.width, ctx.canvas.height);
+        }
+
+        ctx.strokeStyle = "black";
+        ctx.fillStyle = "rgb(255, 255, 255)";
+        circle(30, ctx.canvas.height/2 - (((ctx.canvas.height/2) - 10) * speedLeft), 10);
+        circle(ctx.canvas.width - 30, ctx.canvas.height/2 - (((ctx.canvas.height/2) - 10) * speedRight), 10);
+
+
+        if( oldSpeedLeft != speedLeft || oldSpeedRight != speedRight || oldFire != fire ) {
+            if( ws && connected ) {
+                ws.send('{"left":' + speedLeft + ', "right":' + speedRight + ', "fire": ' + fire + '}');
+            }
+            console.log(speedLeft + ' ' + speedRight);
+
+            oldSpeedLeft = speedLeft;
+            oldSpeedRight = speedRight;
+            oldFire = fire;
+        }
+    }
+
+    </script>
+</section>
+</body>
+</html>

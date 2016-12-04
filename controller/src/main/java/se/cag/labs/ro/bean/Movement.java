@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class Movement {
     double left;
     double right;
+    boolean fire;
 }

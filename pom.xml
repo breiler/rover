@@ -10,7 +10,6 @@
     <version>0.0.1-SNAPSHOT</version>
 
     <modules>
-        <module>webclient</module>
         <module>controller</module>
     </modules>
 
