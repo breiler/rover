@@ -1,4 +1,4 @@
-package se.cag.labs.ro.config;
+package se.cag.labs.rover.config;
 
 import java.io.IOException;
 import java.io.InputStream;

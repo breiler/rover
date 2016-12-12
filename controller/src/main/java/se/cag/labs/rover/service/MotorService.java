@@ -1,4 +1,4 @@
-package se.cag.labs.ro;
+package se.cag.labs.rover.service;
 
 import com.pi4j.io.i2c.I2CFactory;
 import org.springframework.stereotype.Service;
@@ -23,8 +23,8 @@ public class MotorService {
 
             laser = motorHAT.getMotor(AdafruitMotorHAT.Motor.M3);
             laser.run(AdafruitMotorHAT.ServoCommand.RELEASE);
-        } catch (UnsatisfiedLinkError | IOException | I2CFactory.UnsupportedBusNumberException ioe) {
-            ioe.printStackTrace();
+        } catch (UnsatisfiedLinkError | IOException | I2CFactory.UnsupportedBusNumberException e) {
+            e.printStackTrace();
             laser = null;
             leftMotor = null;
             rightMotor = null;
@@ -44,8 +44,8 @@ public class MotorService {
             if (laser != null) {
                 laser.run(AdafruitMotorHAT.ServoCommand.RELEASE);
             }
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

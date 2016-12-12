@@ -1,4 +1,4 @@
-package se.cag.labs.ro.config;
+package se.cag.labs.rover.config;
 
 import lombok.extern.log4j.Log4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
-import se.cag.labs.ro.eventbus.EventBusWebSocketHandler;
+import se.cag.labs.rover.eventbus.EventBusWebSocketHandler;
 
 @Configuration
 @Log4j

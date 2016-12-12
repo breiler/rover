@@ -1,4 +1,4 @@
-package se.cag.labs.ro;
+package se.cag.labs.rover.service;
 
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
@@ -6,6 +6,10 @@ import com.pi4j.io.i2c.I2CFactory;
 
 import java.io.IOException;
 
+/**
+ * Borrowed from:
+ * https://github.com/OlivierLD/raspberry-pi4j-samples/tree/master/I2C.SPI/src/i2c
+ */
 public class PWM {
     public final static int SERVO_ADDRESS = 0x40;
     // Registers/etc.

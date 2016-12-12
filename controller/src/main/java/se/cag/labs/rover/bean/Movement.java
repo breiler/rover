@@ -1,4 +1,4 @@
-package se.cag.labs.ro.bean;
+package se.cag.labs.rover.bean;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

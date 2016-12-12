@@ -1,4 +1,4 @@
-package se.cag.labs.ro;
+package se.cag.labs.rover.service;
 
 import com.pi4j.io.i2c.I2CFactory;
 

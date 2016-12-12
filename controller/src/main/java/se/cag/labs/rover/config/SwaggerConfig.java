@@ -1,4 +1,4 @@
-package se.cag.labs.ro.config;
+package se.cag.labs.rover.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package se.cag.labs.ro.eventbus;
+package se.cag.labs.rover.eventbus;
 
 import com.google.gson.Gson;
 import lombok.extern.log4j.Log4j;
@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-import se.cag.labs.ro.MotorService;
-import se.cag.labs.ro.bean.Movement;
+import se.cag.labs.rover.service.MotorService;
+import se.cag.labs.rover.bean.Movement;
 
 @Log4j
 @Component
