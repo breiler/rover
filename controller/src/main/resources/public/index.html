@@ -90,6 +90,8 @@
     var connected = false;
     var oldFire = false;
 
+    var pingTimer = null;
+
     function canGame() {
         return "getGamepads" in navigator;
     }
@@ -104,8 +106,9 @@
             }
 
             if( gp.axes.length >= 0) {
-                speedLeft = Math.round(-gp.axes[1] / 2.5 * 1000) / 1000;
-                speedRight = Math.round(-gp.axes[3] / 2.5 * 1000 ) / 1000;
+                var factor = 2;
+                speedLeft = Math.round(-gp.axes[1] / factor * 1000) / 1000;
+                speedRight = Math.round(-gp.axes[3] / factor * 1000 ) / 1000;
             }
         }
     }
@@ -169,6 +172,7 @@
             console.log("Connected");
             connected = true;
             $('#connection-icon').show();
+            ping();
         };
 
         ws.onmessage = function (evt) {
@@ -179,7 +183,17 @@
             console.log("Disconnected");
             connected = false;
             $('#connection-icon').hide();
+
+            clearTimeout(pingTimer);
         };
+    }
+
+    function ping() {
+        if( connected ) {
+            console.log("Sending ping");
+            ws.send('{"left":' + speedLeft + ', "right":' + speedRight + ', "fire": ' + fire + '}');
+            pingTimer = setTimeout(ping, 10000);
+        }
     }
 
     function initOverlay() {
@@ -206,7 +220,6 @@
             if( ws && connected ) {
                 ws.send('{"left":' + speedLeft + ', "right":' + speedRight + ', "fire": ' + fire + '}');
             }
-            console.log(speedLeft + ' ' + speedRight);
 
             oldSpeedLeft = speedLeft;
             oldSpeedRight = speedRight;
