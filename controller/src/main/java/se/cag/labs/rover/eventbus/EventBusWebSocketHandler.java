@@ -27,11 +27,11 @@ public class EventBusWebSocketHandler extends TextWebSocketHandler {
             Movement movement = gson.fromJson(message.getPayload(), Movement.class);
             if (movement.isFire()) {
                 motorService.stopMotors();
-                motorService.setLaser(true);
+                motorService.fireLaser(true);
             } else {
-                motorService.setLaser(false);
-                motorService.setLeftSpeed((int) Math.round(255 * movement.getLeft()));
-                motorService.setRightSpeed((int) Math.round(255 * movement.getRight()));
+                motorService.fireLaser(false);
+                motorService.setLeftSpeed(movement.getLeft());
+                motorService.setRightSpeed(movement.getRight());
             }
         } catch (Throwable e) {
             log.error(e);

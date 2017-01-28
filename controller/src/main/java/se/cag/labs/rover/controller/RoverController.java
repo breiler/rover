@@ -9,8 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import se.cag.labs.rover.service.MotorService;
 import se.cag.labs.rover.bean.Movement;
+import se.cag.labs.rover.service.MotorService;
 
 import java.io.IOException;
 
@@ -46,12 +46,12 @@ public class RoverController {
             @RequestBody
             Movement movement) {
         try {
-            motorService.setLeftSpeed((int) Math.round(movement.getLeft() * 255));
-            motorService.setRightSpeed((int) Math.round(movement.getRight() * 255));
+            motorService.setLeftSpeed(movement.getLeft());
+            motorService.setRightSpeed(movement.getRight());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return ResponseEntity.ok("Argh, rov rov rov!" + movement.toString());
+        return ResponseEntity.ok("Argh " + movement.toString());
     }
 
 
@@ -64,7 +64,7 @@ public class RoverController {
     })
     public ResponseEntity<String> fire() {
         try {
-            motorService.setLaser(true);
+            motorService.fireLaser(true);
         } catch (IOException e) {
             e.printStackTrace();
         }

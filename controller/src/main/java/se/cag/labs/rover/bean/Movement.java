@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 public class Movement {
-    double left;
-    double right;
+    float left;
+    float right;
     boolean fire;
 }

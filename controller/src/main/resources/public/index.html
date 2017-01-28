@@ -1,27 +1,37 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+    <meta charset="UTF-8"/>
     <link rel="stylesheet" href="node_modules/font-awesome/css/font-awesome.css"/>
-
     <script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
     <script src="js/camera.js"></script>
     <style>
+
+        @keyframes fadeIt {
+            0%   { color: #D46A6A; }
+            50%  { color: #AA3939; }
+            100% { color: #D46A6A; }
+        }
+
+
         body {
             font-family: sans-serif;
+            margin: 0px;
+            padding: 0px;
         }
+
         .outsideWrapper{
-            border-radius: 10px;
-            width:1024px;
-            height:768px;
+            height: 100vh;
+            width: 100vw;
             margin:auto;
             background-color: white;
-            overflow: hidden;
-            border:1px solid gray;
         }
 
         .insideWrapper {
-            width:100%; height:100%;
+            width:100%;
+            height:100%;
             position:relative;
+            display: block;
         }
 
         .insideWrapper img {
@@ -33,26 +43,63 @@
         }
 
         .insideWrapper canvas {
-            width:1025px;
-            height:768px;
+            width:100%;
+            height:100%;
             position:absolute;
             top:0px;
             left:0px;
         }
 
         .insideWrapper .infobox {
+            border-radius: 15px;
             position:absolute;
-            top:30px;
-            right:30px;
+            top:20px;
+            right:20px;
             color: white;
+            opacity: 0.8;
+            background:rgba(40,40,40,0.5);
+            padding: 0.8em;
         }
 
-        .insideWrapper .infobox span{
-            margin-left: 1em;
+        .insideWrapper .current-race-box {
+            border-radius: 15px;
+            position:absolute;
+            top:20px;
+            left:20px;
+            color: white;
+            background:rgba(40,40,40,0.5);
+            font-size: 1.5em;
+            padding-left: 1em;
+            padding-right: 1em;
+            padding-top: 0.70em;
+            padding-bottom: 0.70em;
+            opacity: 0.8;
+        }
+
+        .insideWrapper .logo {
+            border-radius: 15px;
+            position:absolute;
+            bottom:20px;
+            left:20px;
+            width: 100px;
+            height: 50px;
+            color: white;
+            background:rgba(40,40,40,0.5);
+            padding: 1em;
+            opacity: 0.8;
+        }
+
+        .insideWrapper .infobox span {
+            margin: 0.2em;
+        }
+
+        .insideWrapper .infobox .inactive {
+            animation: fadeIt 1s ease-in-out;
+            animation-iteration-count: infinite;
         }
 
         .infobox i {
-            font-size: 2em;
+            font-size: 0.8em;
         }
 
     </style>
@@ -64,15 +111,19 @@
     <div class="outsideWrapper">
         <div class="insideWrapper">
             <img id="mjpeg_dest" src="img/cam_pic.jpeg">
-            <canvas id="canvas" width="1024" height="768">This text is displayed if your browser does not support HTML5 Canvas.</canvas>
+            <canvas id="canvas">This text is displayed if your browser does not support HTML5 Canvas.</canvas>
+            <div class="current-race-box" id="current-race"></div>
             <div class="infobox">
-                <span id="connection-icon"><i class="fa fa-wifi" aria-hidden="true"></i></span>
+                <span id="rover-icon"><i class="fa fa-car" aria-hidden="true"></i></span>
                 <span id="gamepad-icon"><i class="fa fa-gamepad" aria-hidden="true"></i></span>
+                <span id="server-icon"><i class="fa fa-cloud" aria-hidden="true"></i></span>
             </div>
+            <div class="logo"><img src="img/logo-text.png"/></div>
         </div>
     </div>
 
     <script type="text/javascript">
+
 
 
     var hasGP = false;
@@ -84,6 +135,7 @@
 
     var ws;
     var ctx;
+    var canvas;
 
     var oldSpeedLeft = 0.01;
     var oldSpeedRight = 0.01;
@@ -106,38 +158,44 @@
             }
 
             if( gp.axes.length >= 0) {
-                var factor = 2;
-                speedLeft = Math.round(-gp.axes[1] / factor * 1000) / 1000;
-                speedRight = Math.round(-gp.axes[3] / factor * 1000 ) / 1000;
+                var factor = 0.5;
+                speedLeft = Math.round(-gp.axes[1] * factor * 1000) / 1000;
+                speedRight = Math.round(-gp.axes[3] * factor * 1000) / 1000;
             }
         }
     }
 
     $(document).ready(function() {
 
+        canvas = document.getElementById("canvas");
+        canvas.width = document.body.clientWidth;
+        canvas.height = document.body.clientHeight;
+
+
         setTimeout('init(0, 25, 1);', 100);
-        $('#gamepad-icon').hide();
-        $('#connection-icon').hide();
+        $('#gamepad-icon').addClass('inactive');
+        $('#rover-icon').addClass('inactive');
+        $('#server-icon').addClass('inactive');
+
 
         var host = window.location.hostname;
 
         if(canGame()) {
             $(window).on("gamepadconnected", function() {
                 hasGP = true;
-                $('#gamepad-icon').show();
+                $('#gamepad-icon').removeClass('inactive');
                 console.log("connection event");
                 repGP = window.setInterval(reportOnGamepad,100);
             });
 
             $(window).on("gamepaddisconnected", function() {
                 console.log("disconnection event");
-                $('#gamepad-icon').hide();
+                $('#gamepad-icon').addClass('inactive');
                 window.clearInterval(repGP);
             });
 
             //setup an interval for Chrome
             var checkGP = window.setInterval(function() {
-                console.log('checkGP');
                 if(navigator.getGamepads()[0]) {
                     if(!hasGP) $(window).trigger("gamepadconnected");
                     window.clearInterval(checkGP);
@@ -147,7 +205,28 @@
 
         connect();
         initOverlay();
+
+
+        var checkApi = window.setInterval(connectToApi, 1000);
     });
+
+    function connectToApi() {
+        $.get( "https://sumorace.caglabs.se/api/currentrace", function( data ) {
+            $('#server-icon').removeClass('inactive');
+
+            if( data && data.user ) {
+                $("#current-race").html(data.user.displayName + '<br/><br/>' +
+                '<i class="fa fa-check-circle" aria-hidden="true"></i><br/>' +
+                '<i class="fa fa-check-circle" aria-hidden="true"></i><br/>' +
+                '<i class="fa fa-times-circle" aria-hidden="true"></i><br/>');
+            } else {
+                $("#current-race").html("Väntar på ny spelare...");
+            }
+          //console.log(data);
+        }).fail(function() {
+            $('#server-icon').addClass('inactive');
+        });
+    }
 
     function circle(x,y,r) {
         ctx.beginPath();
@@ -171,7 +250,7 @@
         ws.onopen = function() {
             console.log("Connected");
             connected = true;
-            $('#connection-icon').show();
+            $('#rover-icon').removeClass('inactive');
             ping();
         };
 
@@ -182,7 +261,7 @@
         ws.onclose = function() {
             console.log("Disconnected");
             connected = false;
-            $('#connection-icon').hide();
+            $('#rover-icon').addClass('inactive');
 
             clearTimeout(pingTimer);
         };
@@ -197,7 +276,7 @@
     }
 
     function initOverlay() {
-        var canvas = document.getElementById("canvas");
+        canvas = document.getElementById("canvas");
         ctx = canvas.getContext("2d");
         return setInterval(draw, 10);
     }
@@ -210,15 +289,17 @@
             rect(0,0, ctx.canvas.width, ctx.canvas.height);
         }
 
+        var circleSize = 20;
         ctx.strokeStyle = "black";
         ctx.fillStyle = "rgb(255, 255, 255)";
-        circle(30, ctx.canvas.height/2 - (((ctx.canvas.height/2) - 10) * speedLeft), 10);
-        circle(ctx.canvas.width - 30, ctx.canvas.height/2 - (((ctx.canvas.height/2) - 10) * speedRight), 10);
+        circle(circleSize*2.5, canvas.height/2 - (((canvas.height/2) - (circleSize/3)) * speedLeft), circleSize);
+        circle(canvas.width - (circleSize*2.5), canvas.height/2 - (((canvas.height/2) - (circleSize/3)) * speedRight), circleSize);
 
 
         if( oldSpeedLeft != speedLeft || oldSpeedRight != speedRight || oldFire != fire ) {
             if( ws && connected ) {
                 ws.send('{"left":' + speedLeft + ', "right":' + speedRight + ', "fire": ' + fire + '}');
+                console.log('left:' + speedLeft + ', right:' + speedRight);
             }
 
             oldSpeedLeft = speedLeft;
