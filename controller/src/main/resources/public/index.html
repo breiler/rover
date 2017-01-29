@@ -57,7 +57,7 @@
             right:20px;
             color: white;
             opacity: 0.8;
-            background:rgba(40,40,40,0.5);
+            background:rgba(40,40,40,0.7);
             padding: 0.8em;
         }
 
@@ -67,14 +67,30 @@
             top:20px;
             left:20px;
             color: white;
-            background:rgba(40,40,40,0.5);
-            font-size: 1.5em;
+            background:rgba(40,40,40,0.7);
+            font-size: 3em;
             padding-left: 1em;
             padding-right: 1em;
             padding-top: 0.70em;
             padding-bottom: 0.70em;
             opacity: 0.8;
         }
+
+        .insideWrapper .waiting-for-player-box {
+            border-radius: 15px;
+            position:absolute;
+            top:42%;
+            left:34%;
+            color: white;
+            background:rgba(40,40,40,0.7);
+            font-size: 3.5em;
+            padding-left: 1em;
+            padding-right: 1em;
+            padding-top: 0.70em;
+            padding-bottom: 0.70em;
+            opacity: 0.8;
+        }
+
 
         .insideWrapper .logo {
             border-radius: 15px;
@@ -84,7 +100,7 @@
             width: 100px;
             height: 50px;
             color: white;
-            background:rgba(40,40,40,0.5);
+            background:rgba(40,40,40,0.7);
             padding: 1em;
             opacity: 0.8;
         }
@@ -102,6 +118,22 @@
             font-size: 0.8em;
         }
 
+        .level {
+            color: #D46A6A;
+            font-size: 0.7em;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .cleared {
+            color: #8ABD5F;
+        }
+
+        .level .description{
+            width: 260px;
+            display: inline-block;
+        }
+
     </style>
 </head>
 <body>
@@ -113,6 +145,7 @@
             <img id="mjpeg_dest" src="img/cam_pic.jpeg">
             <canvas id="canvas">This text is displayed if your browser does not support HTML5 Canvas.</canvas>
             <div class="current-race-box" id="current-race"></div>
+            <div class="waiting-for-player-box" id="waiting-for-player">Väntar på spelare...</div>
             <div class="infobox">
                 <span id="rover-icon"><i class="fa fa-car" aria-hidden="true"></i></span>
                 <span id="gamepad-icon"><i class="fa fa-gamepad" aria-hidden="true"></i></span>
@@ -213,16 +246,32 @@
     function connectToApi() {
         $.get( "https://sumorace.caglabs.se/api/currentrace", function( data ) {
             $('#server-icon').removeClass('inactive');
-
             if( data && data.user ) {
-                $("#current-race").html(data.user.displayName + '<br/><br/>' +
-                '<i class="fa fa-check-circle" aria-hidden="true"></i><br/>' +
-                '<i class="fa fa-check-circle" aria-hidden="true"></i><br/>' +
-                '<i class="fa fa-times-circle" aria-hidden="true"></i><br/>');
+                $("#current-race").show();
+                $("#waiting-for-player").hide();
+                
+                var html = data.user.displayName;
+
+                if( data.startTime ) {
+                    html += '<div class="level cleared"><span class="description">Första våningen</span><i class="fa fa-check-circle" aria-hidden="true"></i></div>'
+                } else {
+                    html += '<div class="level"><span class="description">Första våningen</span><i class="fa fa-times-circle" aria-hidden="true"></i></div>'
+                }
+                if( data.splitTime ) {
+                    html += '<div class="level cleared"><span class="description">Skjut målet</span><i class="fa fa-check-circle" aria-hidden="true"></i></div>'
+                } else {
+                    html += '<div class="level"><span class="description">Skjut målet</span><i class="fa fa-times-circle" aria-hidden="true"></i></div>'
+                }
+                if( data.finishTime ) {
+                    html += '<div class="level cleared"><span class="description">Tredje våningen</span><i class="fa fa-check-circle" aria-hidden="true"></i></div>'
+                } else {
+                    html += '<div class="level"><span class="description">Tredje våningen</span><i class="fa fa-times-circle" aria-hidden="true"></i></div>'
+                }
+                $("#current-race").html(html);
             } else {
-                $("#current-race").html("Väntar på ny spelare...");
+                $("#current-race").hide();
+                $("#waiting-for-player").show();
             }
-          //console.log(data);
         }).fail(function() {
             $('#server-icon').addClass('inactive');
         });

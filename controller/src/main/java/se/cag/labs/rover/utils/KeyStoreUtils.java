@@ -53,7 +53,7 @@ public class KeyStoreUtils {
         } catch (NoSuchAlgorithmException e) {
             throw new IOException("Certificate contained an unknown algorithm and couldn't be stored", e);
         } catch (KeyStoreException e) {
-            throw new IOException("Could'nt create keystore", e);
+            throw new IOException("Couldn't create keystore", e);
         } catch (FileNotFoundException e) {
             throw new IOException("Couldn't create keystore file", e);
         }
@@ -81,12 +81,9 @@ public class KeyStoreUtils {
      * @throws IOException
      */
     public static List<Certificate> retrieveAllCertificates(String hostname, int port) throws NoSuchAlgorithmException, KeyManagementException, IOException {
-
         SSLSocket socket = null;
-
         try {
-            SSLContext sc = trustAllSSL();
-
+            SSLContext sc = createSSLContextThatTrustsAllCerts();
 
             // Create a SSL socket
             SSLSocketFactory factory = sc.getSocketFactory();
@@ -103,7 +100,7 @@ public class KeyStoreUtils {
         }
     }
 
-    public static SSLContext trustAllSSL() throws NoSuchAlgorithmException, KeyManagementException {
+    private static SSLContext createSSLContextThatTrustsAllCerts() throws NoSuchAlgorithmException, KeyManagementException {
         // Create a trust manager that does not validate certificate chains
         TrustManager[] trustAllCerts = createTrustAllManager();
 
