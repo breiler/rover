@@ -4,6 +4,7 @@
     <meta charset="UTF-8"/>
     <link rel="stylesheet" href="node_modules/font-awesome/css/font-awesome.css"/>
     <script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="node_modules/sockjs-client/dist/sockjs.js"></script>
     <script src="js/camera.js"></script>
     <style>
 
@@ -191,7 +192,7 @@
             }
 
             if( gp.axes.length >= 0) {
-                var factor = 0.5;
+                var factor = 0.4;
                 speedLeft = Math.round(-gp.axes[1] * factor * 1000) / 1000;
                 speedRight = Math.round(-gp.axes[3] * factor * 1000) / 1000;
             }
@@ -205,7 +206,7 @@
         canvas.height = document.body.clientHeight;
 
 
-        setTimeout('init(0, 25, 1);', 100);
+        setTimeout('init(0, 25, 1);', 1000);
         $('#gamepad-icon').addClass('inactive');
         $('#rover-icon').addClass('inactive');
         $('#server-icon').addClass('inactive');
@@ -236,20 +237,19 @@
             }, 1000);
         }
 
+        fetchData();
         connect();
         initOverlay();
-
-
-        var checkApi = window.setInterval(connectToApi, 1000);
+        connectToApi();
     });
 
-    function connectToApi() {
-        $.get( "https://sumorace.caglabs.se/api/currentrace", function( data ) {
+    function fetchData(withTimeOut=true) {
+        $.get( "https://zumorace.caglabs.se/api/currentrace", function( data ) {
             $('#server-icon').removeClass('inactive');
             if( data && data.user ) {
                 $("#current-race").show();
                 $("#waiting-for-player").hide();
-                
+
                 var html = data.user.displayName;
 
                 if( data.startTime ) {
@@ -275,7 +275,12 @@
         }).fail(function() {
             $('#server-icon').addClass('inactive');
         });
+
+        if( withTimeOut ) {
+            setTimeout(fetchData, 10000);
+        }
     }
+
 
     function circle(x,y,r) {
         ctx.beginPath();
@@ -313,6 +318,27 @@
             $('#rover-icon').addClass('inactive');
 
             clearTimeout(pingTimer);
+        };
+    }
+
+
+    function connectToApi() {
+
+        // Let us open a web socket
+        var wsApi = new SockJS('https://zumorace.caglabs.se/api/eventchannel');
+
+        wsApi.onopen = function() {
+            console.log("Connected to eventbus");
+        };
+
+        wsApi.onmessage = function (evt) {
+            console.log("Got data from eventbus", evt.data);
+            fetchData(false);
+        };
+
+        wsApi.onclose = function() {
+            console.log("Disconnected from eventbus");
+            setTimeout(connectToApi, 5000);
         };
     }
 
