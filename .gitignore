@@ -15,3 +15,4 @@ webclient/node/
 webclient/node_modules/
 *.iml
 controller/target
+/.project
